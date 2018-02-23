@@ -17,6 +17,8 @@
 #include <cstring>
 #include <memory>
 #include <sstream>
+#include <omp.h>
+#include <iostream>
 
 namespace tvm {
 namespace runtime {
@@ -323,8 +325,37 @@ int TVMBackendParallelLaunch(
     FTVMParallelLambda flambda,
     void* cdata,
     int num_task) {
-  return tvm::runtime::ThreadPool::Global()->Launch(
-      flambda, cdata, num_task, 1);
+  const char *val = getenv("TVM_NUM_THREADS");
+  int num_workers;
+  if (val == nullptr) {
+    val = getenv("OMP_NUM_THREADS");
+  }
+  if (val != nullptr) {
+    num_workers = atoi(val);
+  } else {
+#if defined(_M_X64) || defined(__x86_64__)
+  // Half to not count hyper threading.
+  num_workers = std::thread::hardware_concurrency() / 2;
+#else
+  num_workers = std::thread::hardware_concurrency();
+#endif
+  }
+  num_workers = std::max(num_workers, 1);
+  if (num_task ==0) num_task = num_workers;
+  omp_set_num_threads(num_workers);
+  #pragma omp parallel num_threads(num_workers)
+  {
+    TVMParallelGroupEnv env;
+    env.num_task = num_task;
+    std::atomic<int32_t>* sync_counter = new std::atomic<int>[num_task * tvm::runtime::kSyncStride];;
+    for (int i = 0; i < num_task; ++i) {
+        sync_counter[i * tvm::runtime::kSyncStride].store(
+            0, std::memory_order_relaxed);
+      }
+    env.sync_handle = sync_counter;
+    (*flambda)(omp_get_thread_num(), &env, cdata);
+  }
+  return 0;
 }
 
 int TVMBackendParallelBarrier(int task_id, TVMParallelGroupEnv* penv) {
