@@ -343,7 +343,7 @@ int TVMBackendParallelLaunch(
   }
   num_workers = std::max(num_workers, 1);
   if (num_task ==0) num_task = num_workers;
-  chrono::steady_clock::time_point t1, t2, t3 t4;
+  std::chrono::steady_clock::time_point t1, t2, t3, t4;
   omp_set_num_threads(num_workers);
   t1 = std::chrono::steady_clock::now();
   #pragma omp parallel num_threads(num_workers)
