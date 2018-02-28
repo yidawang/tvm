@@ -360,8 +360,8 @@ int TVMBackendParallelLaunch(
     (*flambda)(omp_get_thread_num(), &env, cdata);
     //if (omp_get_thread_num() == 0) t3 = std::chrono::steady_clock::now();
   }
-  t4 = std::chrono::steady_clock::now();
-  /*if (omp_get_thread_num() == 0) {
+  /*t4 = std::chrono::steady_clock::now();
+  if (omp_get_thread_num() == 0) {
     long d1 = static_cast<long>(std::chrono::duration<double, std::micro>(t2 - t1).count());
     long d2 = static_cast<long>(std::chrono::duration<double, std::micro>(t3 - t2).count());
     long d3 = static_cast<long>(std::chrono::duration<double, std::micro>(t4 - t3).count());
