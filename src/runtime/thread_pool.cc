@@ -342,9 +342,9 @@ int TVMBackendParallelLaunch(
   }
   num_workers = std::max(num_workers, 1);
   if (num_task ==0) num_task = num_workers;
-  std::chrono::steady_clock::time_point t1, t2, t3, t4;
+  //std::chrono::steady_clock::time_point t1, t2, t3, t4;
   omp_set_num_threads(num_workers);
-  t1 = std::chrono::steady_clock::now();
+  //t1 = std::chrono::steady_clock::now();
   #pragma omp parallel num_threads(num_workers)
   {
     TVMParallelGroupEnv env;
@@ -355,17 +355,17 @@ int TVMBackendParallelLaunch(
           0, std::memory_order_relaxed);
     }
     env.sync_handle = sync_counter;
-    if (omp_get_thread_num() == 0) t2 = std::chrono::steady_clock::now();
+    //if (omp_get_thread_num() == 0) t2 = std::chrono::steady_clock::now();
     (*flambda)(omp_get_thread_num(), &env, cdata);
-    if (omp_get_thread_num() == 0) t3 = std::chrono::steady_clock::now();
+    //if (omp_get_thread_num() == 0) t3 = std::chrono::steady_clock::now();
   }
-  t4 = std::chrono::steady_clock::now();
+  /*t4 = std::chrono::steady_clock::now();
   if (omp_get_thread_num() == 0) {
     long d1 = static_cast<long>(std::chrono::duration<double, std::micro>(t2 - t1).count());
     long d2 = static_cast<long>(std::chrono::duration<double, std::micro>(t3 - t2).count());
     long d3 = static_cast<long>(std::chrono::duration<double, std::micro>(t4 - t3).count());
     LOG_EVERY_N(INFO, 1000) << d1 << " " << d2 << " " << d3;
-  }
+  }*/
   return 0;
 }
 
